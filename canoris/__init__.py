@@ -150,7 +150,13 @@ class CanReq(object):
         d = urllib.urlencode(data) if data else None
         req = RequestWithMethod(u, method, d)
         try:
-            f = urllib2.urlopen(req)
+            try:
+                f = urllib2.urlopen(req)
+            except HTTPError, e:
+                if e.code >= 200 and e.code < 300:
+                    pass
+                else:
+                    raise e
             resp = f.read()
             f.close()
             return resp
