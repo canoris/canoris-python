@@ -149,17 +149,27 @@ class CanReq(object):
         u = '%s?%s' % (uri, urllib.urlencode(p))
         d = urllib.urlencode(data) if data else None
         req = RequestWithMethod(u, method, d)
-        f = urllib2.urlopen(req)
-        resp = f.read()
-        f.close()
-        return resp
+        try:
+            f = urllib2.urlopen(req)
+            resp = f.read()
+            f.close()
+            return resp
+        except HTTPError, e:
+            print '--- request failed ---'
+            print 'code:\t%s' % e.code
+            print 'resp:\n%s' % e.read()
+            raise e
 
 
 class File(CanorisObject):
 
     @staticmethod
     def get_file(key):
-        return File(json.loads(CanReq.simple_get(_uri(URI_FILE, key))))
+        return File.get_file_from_ref(_uri(URI_FILE, key))
+
+    @staticmethod
+    def get_file_from_ref(ref):
+        return File(json.loads(CanReq.simple_get(ref)))
 
     @staticmethod
     def create_file(path, name=None, temporary=None):
@@ -281,6 +291,18 @@ class Task(CanorisObject):
     def __repr__(self):
         return '<File: task_id="%s", completed="%s", successful="%s">' % \
                 (self['task_id'], self['complete'], self['successful'])
+
+
+class Text2Phonemes(object):
+
+    @staticmethod
+    def translate(text):
+        return json.loads(CanReq.simple_get(_uri(URI_PHONEMES),
+                                            {'language': 'spanish',
+                                             'text': text}))
+
+
+
 
 '''
 Canoris.set_api_key('12d6dc5486554e278e370cdc49935905')
