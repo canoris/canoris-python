@@ -272,8 +272,9 @@ class Template(CanorisObject):
 
     @staticmethod
     def create_template(name, steps):
-        return Template(json.loads(CanReq.simple_create(_uri(URI_TEMPLATES),
-                                                        json.dumps(steps))))
+        args = {'name': name,
+                'template': json.dumps(steps)}
+        return Template(json.loads(CanReq.simple_post(_uri(URI_TEMPLATES), args)))
 
     def delete(self):
         return CanReq.simple_del(self['ref'])
