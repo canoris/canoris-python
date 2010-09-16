@@ -303,10 +303,13 @@ class Task(CanorisObject):
 class Text2Phonemes(object):
 
     @staticmethod
-    def translate(text):
-        return json.loads(CanReq.simple_get(_uri(URI_PHONEMES),
-                                            {'language': 'spanish',
-                                             'text': text}))
+    def translate(text, voice=False, language=False):
+        lang = language if language else 'spanish'
+        args = {'language': lang,
+                'text': text}
+        if voice:
+            args['voice'] = str(voice)
+        return json.loads(CanReq.simple_get(_uri(URI_PHONEMES), args))
 
 
 
