@@ -154,7 +154,7 @@ class CanReq(object):
                 f = urllib2.urlopen(req)
             except HTTPError, e:
                 if e.code >= 200 and e.code < 300:
-                    resp = f.read()
+                    resp = e.read()
                     return resp
                 else:
                     raise e
