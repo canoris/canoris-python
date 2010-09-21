@@ -248,6 +248,9 @@ class Collection(CanorisObject):
                    file['key'] if isinstance(file, File) else file)
         return CanReq.simple_del(uri)
 
+    def files(self, page=0):
+        return json.loads(CanReq.simple_get(self['files'], params={'page': page} ))
+
     def get_similar(self, query_file, preset, num_results):
         '''
         ``target_file`` can be a file key or a file object.
