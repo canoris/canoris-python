@@ -194,9 +194,10 @@ class File(CanorisObject):
     def delete(self):
         return CanReq.simple_del(self['ref'])
 
-    def get_analysis(self, *filter):
+    def get_analysis(self, showall=False, *filter):
         return json.loads(CanReq.simple_get(_uri(URI_FILE_ANALYSIS, self['key'],
-                                               '/'.join(filter))))
+                                               '/'.join(filter)), params={'all': int(showall)} ))
+	
 
     def retrieve(self):
         return CanReq.simple_get(self['serve'])
