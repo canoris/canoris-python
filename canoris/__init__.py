@@ -81,7 +81,7 @@ class Licenses(object):
     AllRightsReserved                           = 'ARR'
 
 
-class RequestWithMethod(urllib2.Request):
+class _RequestWithMethod(urllib2.Request):
     '''Workaround for using DELETE and PUT with urllib2.
 
     N.B. Taken from http://www.abhinandh.com/posts/making-a-http-delete-request-with-urllib2/
@@ -162,7 +162,7 @@ class _CanReq(object):
         p['api_key'] = Canoris.get_api_key()
         u = '%s?%s' % (uri, urllib.urlencode(p))
         d = urllib.urlencode(data) if data else None
-        req = RequestWithMethod(u, method, d)
+        req = _RequestWithMethod(u, method, d)
         try:
             try:
                 f = urllib2.urlopen(req)
@@ -195,9 +195,12 @@ class File(CanorisObject):
         '''Retrieve a File object by specifying the file's key or ref.
 
         Arguments:
-        key -- the file's key
+
+        key
+          the file's key
 
         Returns:
+
         A File object
         '''
         res = _CanReq.simple_get(_uri(_URI_FILE, key))
@@ -209,14 +212,20 @@ class File(CanorisObject):
         '''Upload a sound file and create a File object.
 
         Arguments:
-        path -- the path of the local sound file to upload
+
+        path
+          the path of the local sound file to upload
 
         Keyword arguments:
-        name -- give the file a name
-        temporary -- mark the new file as temporary
+
+        name
+          give the file a name
+        temporary
+          mark the new file as temporary
 
         Returns:
-        A File object
+
+        a File object
         '''
         args = {"file": open(path, "rb")}
         if name != None:
@@ -237,15 +246,23 @@ class File(CanorisObject):
         '''Retrieve the File's analysis.
 
         Arguments:
-        any argument -- retrieve a certain part of the analysis tree
+
+        any argument
+          retrieve a certain part of the analysis tree
 
         Keyword arguments:
-        showall -- retrieve all available analysis data (default: False)
+
+        showall
+          retrieve all available analysis data (default: False)
 
         Example:
-        file1.get_analysis('highlevel', 'gender', 'value')
+
+        ::
+
+          file1.get_analysis('highlevel', 'gender', 'value')
 
         Returns:
+
         Depending on the filter returns a dictionary, list, number, or string.
         '''
         return json.loads(_CanReq.simple_get(_uri(_URI_FILE_ANALYSIS, self['key'],
@@ -255,12 +272,17 @@ class File(CanorisObject):
         '''Retrieve the original file and save it to disk.
 
         Arguments:
-        directory -- save the file in this directory
+
+        directory
+          save the file in this directory
 
         Keyword arguments:
-        name -- save the file under this name, if not present uses the original file name
+
+        name
+          save the file under this name, if not present uses the original file name
 
         Returns:
+
         a tuple: (<path>, <httplib.HTTPMessage instance>)
         '''
         path = os.path.join(directory, name if name else self['name'])
@@ -274,10 +296,14 @@ class File(CanorisObject):
         '''Retrieve a specific conversion and save it to disk.
 
         Arguments:
-        conv_key -- the key for the conversion to retrieve
-        path -- save the file to this path
+
+        conv_key
+          the key for the conversion to retrieve
+        path
+          save the file to this path
 
         Returns:
+
         a tuple: (<path>, <httplib.HTTPMessage instance>)
         '''
         return _CanReq.retrieve(_uri(_URI_FILE_CONVERSION,
@@ -292,12 +318,16 @@ class File(CanorisObject):
         '''Retrieve a specific visualization and save it to disk.
 
         Arguments:
-        vis_key -- the key for the visualization to retrieve
-        path -- save the file to this path
+
+        vis_key
+          the key for the visualization to retrieve
+        path
+          save the file to this path
 
         N.B. waveform is png, spectrum is jpg
 
         Returns:
+
         a tuple: (<path>, <httplib.HTTPMessage instance>)
         '''
         return _CanReq.retrieve(_uri(_URI_FILE_VISUALIZATION,
@@ -317,10 +347,13 @@ class Collection(CanorisObject):
         '''Retrieve a Collection object by specifying the collection's key or ref.
 
         Arguments:
-        key -- the collection's key
+
+        key
+          the collection's key
 
         Returns:
-        A Collection object
+
+        a Collection object
         '''
         return Collection(json.loads(_CanReq.simple_get(_uri(_URI_COLLECTION,
                                                             key))))
@@ -330,16 +363,22 @@ class Collection(CanorisObject):
         '''Create a new collection.
 
         Arguments:
-        name -- the name of the new collection
+
+        name
+          the name of the new collection
 
         Keyword arguments:
-        public -- whether the collection can later be accessed by other users (default: True)
-        license -- if public, the files in the collection can be used under this license (default: AllRightsReserved)
+
+        public
+          whether the collection can later be accessed by other users (default: True)
+        license
+          if public, the files in the collection can be used under this license (default: AllRightsReserved)
 
         N.B. The Licenses class contains all the licenses that can be used.
 
         Returns:
-        A Collection object
+
+        a Collection object
         '''
         public = '1' if public else '0'
         params = {'name': name, 'public': public, 'license': license}
@@ -354,9 +393,12 @@ class Collection(CanorisObject):
         '''Add an existing File object to the Collection.
 
         Arguments:
-        file -- can be either a File object or a file's key
+
+        file
+          can be either a File object or a file's key
 
         Returns:
+
         None
         '''
         params = {'filekey': file['key'] if isinstance(file, File) else file}
@@ -366,9 +408,12 @@ class Collection(CanorisObject):
         '''Remove a File from the Collection.
 
         Arguments:
-        file -- can be either a File object or a file's key
+
+        file
+          can be either a File object or a file's key
 
         Returns:
+
         None
         '''
         uri = _uri(_URI_COLLECTION_FILE, self['key'],
@@ -379,10 +424,13 @@ class Collection(CanorisObject):
         '''Get a list of Files in the Collection.
 
         Keyword arguments:
-        page -- the page of files to retrieve, each page contains 20 files (default: 0)
+
+        page
+          the page of files to retrieve, each page contains 20 files (default: 0)
 
         Returns:
-        A dictionary representing a paginated list.
+
+        a dictionary representing a paginated list
         '''
         return json.loads(_CanReq.simple_get(self['files'], params={'page': page} ))
 
@@ -390,14 +438,20 @@ class Collection(CanorisObject):
         '''Perform a similarity search in this Collection.
 
         Arguments:
-        query_file -- can be either a File or a file's key
-        preset -- the similarity search preset to use ('music', 'rhythm', or 'lowlevel')
+
+        query_file
+          can be either a File or a file's key
+        preset
+          the similarity search preset to use ('music', 'rhythm', or 'lowlevel')
 
         Keyword arguments:
-        num_results -- the number of results to return
+
+        num_results
+          the number of results to return
 
         Returns:
-        A list with the search results
+
+        a list with the search results
         '''
         fkey = query_file['key'] if isinstance(query_file, File) else query_file
         uri  = _uri(_URI_COLLECTION_SIMILAR, self['key'],
@@ -419,9 +473,12 @@ class Template(CanorisObject):
         '''Retrieve a template by specifying it's name or ref.
 
         Arguments:
-        name -- the template's name
+
+        name
+          the template's name
 
         Returns:
+
         a Template object
         '''
         return Template(json.loads(_CanReq.simple_get(_uri(_URI_TEMPLATE, name))))
@@ -431,10 +488,14 @@ class Template(CanorisObject):
         '''Create a new template.
 
         Arguments:
-        name -- the template's name
-        steps -- a Python list
+
+        name
+          the template's name
+        steps
+          a Python list
 
         Returns:
+
         a Template object
         '''
         args = {'name': name,
@@ -454,9 +515,12 @@ class Task(CanorisObject):
         '''Retrieve a Task object by specifying it's id or ref.
 
         Arguments:
-        task_id -- the task's id
+
+        task_id
+          the task's id
 
         Returns:
+
         a Task object
         '''
         return Task(json.loads(_CanReq.simple_get(_uri(_URI_TASK, task_id))))
@@ -466,10 +530,14 @@ class Task(CanorisObject):
         '''Create a new processing task.
 
         Arguments:
-        template -- the template's name to generate the task from
-        parameters -- a Python dictionary of template variables to replace
+
+        template
+          the template's name to generate the task from
+        parameters
+          a Python dictionary of template variables to replace
 
         Returns:
+
         a Task object
         '''
         return Task(json.loads(_CanReq.simple_post(
@@ -490,13 +558,19 @@ class Text2Phonemes(object):
         '''Translate text into phonemes.
 
         Arguments:
-        text -- the text to translate
+
+        text
+          the text to translate
 
         Keyword arguments:
-        voice -- the Vocaloid voice to fine tune the phonemes for (ona, lara, or arnau)
-        language -- the language of the text (english, or spanish)
+
+        voice
+          the Vocaloid voice to fine tune the phonemes for (ona, lara, or arnau)
+        language
+          the language of the text (english, or spanish)
 
         Returns:
+
         a dictionary representing the translation
         '''
         lang = language if language else 'spanish'
