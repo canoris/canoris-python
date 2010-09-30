@@ -377,7 +377,7 @@ class Collection(CanorisObject):
         fkey = query_file['key'] if isinstance(query_file, File) else query_file
         uri  = _uri(_URI_COLLECTION_SIMILAR, self['key'],
                     fkey, preset, num_results)
-        return [{'similarity': result['similarity'],
+        return [{'distance': result['distance'],
                  'file': File({'ref': result['ref']})} \
                  for result in json.loads(_CanReq.simple_get(uri))]
 
