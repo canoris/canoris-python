@@ -1,79 +1,86 @@
-import httplib2, urllib2, urllib
+import httplib2, urllib2, urllib, re, os
 from poster.encode import multipart_encode
 from poster.streaminghttp import register_openers
 import simplejson as json
 from urllib2 import HTTPError
-import re
-from contextlib import contextmanager
-import os
 
 # Register the streaming http handlers with urllib2
 register_openers()
 
-BASE_URI                = 'http://api.canoris.com'
-
-URI_FILES               = '/files'
-URI_FILE                = '/files/<file_key>'
-URI_FILE_SERVE          = '/files/<file_key>/serve'
-URI_FILE_ANALYSIS       = '/files/<file_key>/analysis/<filter>'
-URI_FILE_CONVERSIONS    = '/files/<file_key>/conversions'
-URI_FILE_CONVERSION     = '/files/<file_key>/conversions/<conversion>'
-URI_FILE_VISUALIZATIONS = '/files/<file_key>/visualizations'
-URI_FILE_VISUALIZATION  = '/files/<file_key>/visualizations/<visualization>'
-URI_COLLECTIONS         = '/collections'
-URI_COLLECTION          = '/collections/<coll_key>'
-URI_COLLECTION_FILES    = '/collections/<coll_key>/files'
-URI_COLLECTION_FILE     = '/collections/<coll_key>/files/<file_key>'
-URI_COLLECTION_SIMILAR  = '/collections/<coll_key>/similar/<file_key>/<preset>/<results>'
-URI_TEMPLATES           = '/processing/templates'
-URI_TEMPLATE            = '/processing/templates/<tpl_name>'
-URI_TASKS               = '/processing/tasks'
-URI_TASK                = '/processing/tasks/<task_id>'
-URI_PHONEMES            = '/language/text2phonemes'
+_URI_FILES               = '/files'
+_URI_FILE                = '/files/<file_key>'
+_URI_FILE_SERVE          = '/files/<file_key>/serve'
+_URI_FILE_ANALYSIS       = '/files/<file_key>/analysis/<filter>'
+_URI_FILE_CONVERSIONS    = '/files/<file_key>/conversions'
+_URI_FILE_CONVERSION     = '/files/<file_key>/conversions/<conversion>'
+_URI_FILE_VISUALIZATIONS = '/files/<file_key>/visualizations'
+_URI_FILE_VISUALIZATION  = '/files/<file_key>/visualizations/<visualization>'
+_URI_COLLECTIONS         = '/collections'
+_URI_COLLECTION          = '/collections/<coll_key>'
+_URI_COLLECTION_FILES    = '/collections/<coll_key>/files'
+_URI_COLLECTION_FILE     = '/collections/<coll_key>/files/<file_key>'
+_URI_COLLECTION_SIMILAR  = '/collections/<coll_key>/similar/<file_key>/<preset>/<results>'
+_URI_TEMPLATES           = '/processing/templates'
+_URI_TEMPLATE            = '/processing/templates/<tpl_name>'
+_URI_TASKS               = '/processing/tasks'
+_URI_TASK                = '/processing/tasks/<task_id>'
+_URI_PHONEMES            = '/language/text2phonemes'
 
 
 def _uri(uri, *args):
     for a in args:
         uri = re.sub('<[\w_]+>', str(a), uri, 1)
-    return BASE_URI+uri
+    return Canoris.get_base_uri()+uri
 
 
 class Canoris():
+    '''Use this class to set your API key before doing any requests.
+
+    Set your API key at the start of your program. Afterwards, all requests
+    done with the canoris library will be signed with that API key.
+
+    For testing purposes you can also set the Canoris base URL. This is by
+    default set to the right URL, so you shouldn't have to change this.
+    '''
 
     __api_key = False
+    __base_uri = 'http://api.canoris.com'
 
     @classmethod
     def set_api_key(cls, key):
+        '''Set your API key for all other requests to use.'''
         cls.__api_key = key
 
     @classmethod
     def get_api_key(cls):
         if not cls.__api_key:
-            raise Exception("Please set the API key! --> Canoris.set_api_key(<your_key>)")
+            raise Exception("Please set the API key! ==> Canoris.set_api_key('your_api_key')")
         return cls.__api_key
 
-    @staticmethod
-    @contextmanager
-    def with_key(key):
-        class _tmp_cls():
-            api_key = key
-        Canoris = _tmp_cls
-        yield
+    @classmethod
+    def get_base_uri(cls):
+        return cls.__base_uri
 
+    @classmethod
+    def set_base_uri(cls, uri):
+        '''Set the Canoris base URL.'''
+        cls.__base_uri = uri
 
 class Licenses(object):
-    CC_Attribution                              = 'CC_Attribution'
-    CC_AttributionShareAlike                    = 'CC_AttributionShareAlike'
-    CC_AttributionNoDerivatives                 = 'CC_AttributionNoDerivatives'
-    CC_AttributionNonCommercial                 = 'CC_AttributionNonCommercial'
-    CC_AttributionNonCommercialShareAlike       = 'CC_AttributionNonCommercialShareAlike'
-    CC_AttributionNonCommercialNoDerivatives    = 'CC_AttributionNonCommercialNoDerivatives'
-    AllRightsReserved                           = 'AllRightsReserved'
+    '''The Licenses class encodes all the available licenses that can be used
+    with collections.'''
+
+    CC_Attribution                              = 'CC_AT'
+    CC_AttributionShareAlike                    = 'CC_AT_SA'
+    CC_AttributionNoDerivatives                 = 'CC_AT_ND'
+    CC_AttributionNonCommercial                 = 'CC_AT_NC'
+    CC_AttributionNonCommercialShareAlike       = 'CC_AT_NC_SA'
+    CC_AttributionNonCommercialNoDerivatives    = 'CC_AT_NC_ND'
+    AllRightsReserved                           = 'ARR'
 
 
 class RequestWithMethod(urllib2.Request):
-    '''
-    Workaround for using DELETE with urllib2.
+    '''Workaround for using DELETE and PUT with urllib2.
 
     N.B. Taken from http://www.abhinandh.com/posts/making-a-http-delete-request-with-urllib2/
     '''
@@ -91,6 +98,11 @@ class RequestWithMethod(urllib2.Request):
 
 
 class CanorisObject(object):
+    '''Base object for File, Collection, Template, Task, etc.
+
+    This class most notably implements the __getitem__ method so that the
+    properties of the sub classes can be retrieved dictionary style.
+    '''
 
     def __init__(self, attrs):
         # If we only set the ref field we will set _loaded to false.
@@ -118,17 +130,16 @@ class CanorisObject(object):
         return self.attributes.keys()
 
     def __load(self):
-        self.attributes = json.loads(CanReq.simple_get(self['ref']))
-
-    def get(self, name, default):
-        return self.attributes.get(name, default)
+        self.attributes = json.loads(_CanReq.simple_get(self['ref']))
 
     def update(self):
+        '''With an existing object, reload the data from the Canoris API.'''
         self.__load()
         return self.attributes
 
 
-class CanReq(object):
+class _CanReq(object):
+    '''This class wraps all the logic for doing HTTP requests.'''
 
     @classmethod
     def simple_get(cls, uri, params=False):
@@ -144,6 +155,7 @@ class CanReq(object):
 
     @classmethod
     def _simple_req(cls, uri, method, params, data=False):
+        print Canoris.get_api_key()
         p = params if params else {}
         p['api_key'] = Canoris.get_api_key()
         u = '%s?%s' % (uri, urllib.urlencode(p))
@@ -162,6 +174,7 @@ class CanReq(object):
             f.close()
             return resp
         except HTTPError, e:
+            # TODO; this is ugly
             print '--- request failed ---'
             print 'code:\t%s' % e.code
             print 'resp:\n%s' % e.read()
@@ -169,17 +182,34 @@ class CanReq(object):
 
 
 class File(CanorisObject):
+    '''The File class is used to interact with and to upload Canoris files.'''
 
     @staticmethod
     def get_file(key):
-        return File.get_file_from_ref(_uri(URI_FILE, key))
+        '''Retrieve a File object by specifying the file's key.
 
-    @staticmethod
-    def get_file_from_ref(ref):
-        return File(json.loads(CanReq.simple_get(ref)))
+        Arguments:
+        key -- the file's key
+
+        Returns:
+        A File object
+        '''
+        return File.get_file_from_ref(_uri(_URI_FILE, key))
 
     @staticmethod
     def create_file(path, name=None, temporary=None):
+        '''Upload a sound file and create a File object.
+
+        Arguments:
+        path -- the path of the local sound file to upload
+
+        Keyword arguments:
+        name -- give the file a name
+        temporary -- mark the new file as temporary
+
+        Returns:
+        A File object
+        '''
         args = {"file": open(path, "rb")}
         if name != None:
             args['name'] = str(name)
@@ -187,81 +217,169 @@ class File(CanorisObject):
             args['temporary'] = 1 if temporary else 0
         args['api_key'] = Canoris.get_api_key()
         datagen, headers = multipart_encode(args)
-        request = urllib2.Request(_uri(URI_FILES), datagen, headers)
+        request = urllib2.Request(_uri(_URI_FILES), datagen, headers)
         resp = urllib2.urlopen(request).read()
         return File(json.loads(resp))
 
     def delete(self):
-        return CanReq.simple_del(self['ref'])
+        '''Delete a File from the Canoris API.'''
+        return _CanReq.simple_del(self['ref'])
 
     def get_analysis(self, showall=False, *filter):
-        return json.loads(CanReq.simple_get(_uri(URI_FILE_ANALYSIS, self['key'],
+        '''Retrieve the File's analysis.
+
+        Arguments:
+        any argument -- retrieve a certain part of the analysis tree
+
+        Keyword arguments:
+        showall -- retrieve all available analysis data (default: False)
+
+        Example:
+        file1.get_analysis('highlevel', 'gender', 'value')
+
+        Returns:
+        Depending on the filter returns a dictionary, list, number, or string.
+        '''
+        return json.loads(_CanReq.simple_get(_uri(_URI_FILE_ANALYSIS, self['key'],
                                                '/'.join(filter)), params={'all': int(showall)} ))
-	
 
     def retrieve(self):
-        return CanReq.simple_get(self['serve'])
+        '''Retrieve the original file (binary data!)'''
+        return _CanReq.simple_get(self['serve'])
 
     def get_conversions(self):
-        return json.loads(CanReq.simple_get(self['conversions']))
+        '''Retrieve a dictionary showing the available conversions.'''
+        return json.loads(_CanReq.simple_get(self['conversions']))
 
     def get_conversion(self, conv_key):
-        return CanReq.simple_get(_uri(URI_FILE_CONVERSION, self['key'],
+        '''Retrieve a specific conversion.
+
+        Arguments:
+        conv_key -- the key for the conversion to retrieve
+
+        Returns:
+        binary data
+        '''
+        return _CanReq.simple_get(_uri(_URI_FILE_CONVERSION, self['key'],
                                       conv_key))
 
     def get_visualizations(self):
-        return json.loads(CanReq.simple_get(self['visualizations']))
+        '''Retrieve a dictionary showing the available visualizations.'''
+        return json.loads(_CanReq.simple_get(self['visualizations']))
 
     def get_visualization(self, vis_key):
-        return CanReq.simple_get(_uri(URI_FILE_VISUALIZATION,
+        '''Retrieve a specific visualization.
+
+        Arguments:
+        vis_key -- the key for the visualization to retrieve
+
+        Returns:
+        binary data
+        '''
+        return _CanReq.simple_get(_uri(_URI_FILE_VISUALIZATION,
                                       self['key'], vis_key))
 
     def __repr__(self):
         return '<File: key="%s", name="%s">' % \
-                (self['key'], self.get('name', 'n.a.'))
+                (self['key'], self['name'] if 'name' in self else 'n.a.')
 
 
 class Collection(CanorisObject):
+    '''The Collection class is used to interact with and to create Canoris collections.'''
 
     @staticmethod
     def get_collection(key):
-        return Collection(json.loads(CanReq.simple_get(_uri(URI_COLLECTION,
+        '''Retrieve a Collection object by specifying the collection's key.
+
+        Arguments:
+        key -- the collection's key
+
+        Returns:
+        A Collection object
+        '''
+        return Collection(json.loads(_CanReq.simple_get(_uri(_URI_COLLECTION,
                                                             key))))
 
     @staticmethod
-    def create_collection(name, public, license):
+    def create_collection(name, public=True, license=Licenses.AllRightsReserved):
+        '''Create a new collection.
+
+        Arguments:
+        name -- the name of the new collection
+
+        Keyword arguments:
+        public -- whether the collection can later be accessed by other users (default: True)
+        license -- if public, the files in the collection can be used under this license (default: AllRightsReserved)
+
+        N.B. The Licenses class contains all the licenses that can be used.
+
+        Returns:
+        A Collection object
+        '''
+        public = '1' if public else '0'
         params = {'name': name, 'public': public, 'license': license}
-        resp = CanReq.simple_post(_uri(URI_COLLECTIONS), params)
+        resp = _CanReq.simple_post(_uri(_URI_COLLECTIONS), params)
         return json.loads(resp)
 
     def delete(self):
-        return CanReq.simple_del(self['ref'])
+        '''Delete the Collection from the Canoris API.'''
+        return _CanReq.simple_del(self['ref'])
 
     def add_file(self, file):
-        '''
-        ``file`` can be either a File object or a key.
+        '''Add an existing File object to the Collection.
+
+        Arguments:
+        file -- can be either a File object or a file's key
+
+        Returns:
+        None
         '''
         params = {'filekey': file['key'] if isinstance(file, File) else file}
-        return CanReq.simple_post(self['files'], params)
+        _CanReq.simple_post(self['files'], params)
 
     def remove_file(self, file):
-        uri = _uri(URI_COLLECTION_FILE, self['key'],
+        '''Remove a File from the Collection.
+
+        Arguments:
+        file -- can be either a File object or a file's key
+
+        Returns:
+        None
+        '''
+        uri = _uri(_URI_COLLECTION_FILE, self['key'],
                    file['key'] if isinstance(file, File) else file)
-        return CanReq.simple_del(uri)
+        _CanReq.simple_del(uri)
 
     def files(self, page=0):
-        return json.loads(CanReq.simple_get(self['files'], params={'page': page} ))
+        '''Get a list of Files in the Collection.
 
-    def get_similar(self, query_file, preset, num_results):
+        Keyword arguments:
+        page -- the page of files to retrieve, each page contains 20 files (default: 0)
+
+        Returns:
+        A dictionary representing a paginated list.
         '''
-        ``target_file`` can be a file key or a file object.
+        return json.loads(_CanReq.simple_get(self['files'], params={'page': page} ))
+
+    def get_similar(self, query_file, preset, num_results=10):
+        '''Perform a similarity search in this Collection.
+
+        Arguments:
+        query_file -- can be either a File or a file's key
+        preset -- the similarity search preset to use ('music', 'rhythm', or 'lowlevel')
+
+        Keyword arguments:
+        num_results -- the number of results to return
+
+        Returns:
+        A list with the search results
         '''
         fkey = query_file['key'] if isinstance(query_file, File) else query_file
-        uri  = _uri(URI_COLLECTION_SIMILAR, self['key'],
+        uri  = _uri(_URI_COLLECTION_SIMILAR, self['key'],
                     fkey, preset, num_results)
         return [{'similarity': result['similarity'],
                  'file': File({'ref': result['ref']})} \
-                 for result in json.loads(CanReq.simple_get(uri))]
+                 for result in json.loads(_CanReq.simple_get(uri))]
 
     def __repr__(self):
         return '<File: key="%s", name="%s">' % (self['key'], self['name'])
@@ -269,34 +387,68 @@ class Collection(CanorisObject):
 
 
 class Template(CanorisObject):
+    '''The Template class is used to interact with and to create Canoris templates.'''
 
     @staticmethod
     def get_template(name):
-        return Template(json.loads(CanReq.simple_get(_uri(URI_TEMPLATE, name))))
+        '''Retrieve a template by specifying it's name.
+
+        Arguments:
+        name -- the template's name
+
+        Returns:
+        a Template object
+        '''
+        return Template(json.loads(_CanReq.simple_get(_uri(_URI_TEMPLATE, name))))
 
     @staticmethod
     def create_template(name, steps):
+        '''Create a new template.
+
+        Arguments:
+        name -- the template's name
+        steps -- a Python list
+
+        Returns:
+        a Template object
+        '''
         args = {'name': name,
                 'template': json.dumps(steps)}
-        return Template(json.loads(CanReq.simple_post(_uri(URI_TEMPLATES), args)))
+        return Template(json.loads(_CanReq.simple_post(_uri(_URI_TEMPLATES), args)))
 
     def delete(self):
-        return CanReq.simple_del(self['ref'])
+        '''Delete the Template from the Canoris API.'''
+        return _CanReq.simple_del(self['ref'])
 
 
 class Task(CanorisObject):
+    '''The Task class is used to interact with and to create Canoris tasks.'''
 
     @staticmethod
     def get_task(task_id):
-        return Task(json.loads(CanReq.simple_get(_uri(URI_TASK, task_id))))
+        '''Retrieve a Task object by specifying it's id.
+
+        Arguments:
+        task_id -- the task's id
+
+        Returns:
+        a Task object
+        '''
+        return Task(json.loads(_CanReq.simple_get(_uri(_URI_TASK, task_id))))
 
     @staticmethod
     def create_task(template, parameters):
+        '''Create a new processing task.
+
+        Arguments:
+        template -- the template's name to generate the task from
+        parameters -- a Python dictionary of template variables to replace
+
+        Returns:
+        a Task object
         '''
-        ``parameters`` is a dictionary of template variables to replace.
-        '''
-        return Task(json.loads(CanReq.simple_post(
-                                    _uri(URI_TASKS),
+        return Task(json.loads(_CanReq.simple_post(
+                                    _uri(_URI_TASKS),
                                     {'template': template,
                                      'parameters': json.dumps(parameters)})))
 
@@ -306,26 +458,26 @@ class Task(CanorisObject):
 
 
 class Text2Phonemes(object):
+    '''Translate text into phonemes.'''
 
     @staticmethod
     def translate(text, voice=False, language=False):
+        '''Translate text into phonemes.
+
+        Arguments:
+        text -- the text to translate
+
+        Keyword arguments:
+        voice -- the Vocaloid voice to fine tune the phonemes for (ona, lara, or arnau)
+        language -- the language of the text (english, or spanish)
+
+        Returns:
+        a dictionary representing the translation
+        '''
         lang = language if language else 'spanish'
         args = {'language': lang,
                 'text': text}
         if voice:
             args['voice'] = str(voice)
-        return json.loads(CanReq.simple_get(_uri(URI_PHONEMES), args))
+        return json.loads(_CanReq.simple_get(_uri(_URI_PHONEMES), args))
 
-
-
-
-'''
-Canoris.set_api_key('12d6dc5486554e278e370cdc49935905')
-s = {"sequence": "<melody ticklength='0.01'><note duration='45' pitch='58' velocity='110' phonemes='m a s'/></melody>"}
-t = Task.create_task('vocaloid', s)
-print t
-import time
-time.sleep(3)
-t.update()
-print t
-'''
