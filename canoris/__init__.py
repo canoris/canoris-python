@@ -157,7 +157,6 @@ class _CanReq(object):
 
     @classmethod
     def _simple_req(cls, uri, method, params, data=False):
-        print Canoris.get_api_key()
         p = params if params else {}
         p['api_key'] = Canoris.get_api_key()
         u = '%s?%s' % (uri, urllib.urlencode(p))
