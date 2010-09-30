@@ -1,0 +1,459 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>canoris-python &mdash; canoris-python v0.9 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '#',
+        VERSION:     '0.9',
+        COLLAPSE_MODINDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="canoris-python v0.9 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             accesskey="M">modules</a> |</li>
+        <li><a href="#">canoris-python v0.9 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <h3>This Page</h3>
+            <ul class="this-page-menu">
+              <li><a href="_sources/index.txt"
+                     rel="nofollow">Show Source</a></li>
+            </ul>
+          <div id="searchbox" style="display: none">
+            <h3>Quick search</h3>
+              <form class="search" action="search.html" method="get">
+                <input type="text" name="q" size="18" />
+                <input type="submit" value="Go" />
+                <input type="hidden" name="check_keywords" value="yes" />
+                <input type="hidden" name="area" value="default" />
+              </form>
+              <p class="searchtip" style="font-size: 90%">
+              Enter search terms or a module, class or function name.
+              </p>
+          </div>
+          <script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-canoris">
+<h1>canoris-python<a class="headerlink" href="#module-canoris" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="canoris.Canoris">
+<em class="property">class </em><tt class="descclassname">canoris.</tt><tt class="descname">Canoris</tt><a class="headerlink" href="#canoris.Canoris" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this class to set your API key before doing any requests.</p>
+<p>Set your API key at the start of your program. Afterwards, all requests
+done with the canoris library will be signed with that API key.</p>
+<p>For testing purposes you can also set the Canoris base URL. This is by
+default set to the right URL, so you shouldn&#8217;t have to change this.</p>
+<dl class="classmethod">
+<dt id="canoris.Canoris.set_api_key">
+<em class="property">classmethod </em><tt class="descname">set_api_key</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#canoris.Canoris.set_api_key" title="Permalink to this definition">¶</a></dt>
+<dd>Set your API key for all other requests to use.</dd></dl>
+
+<dl class="classmethod">
+<dt id="canoris.Canoris.set_base_uri">
+<em class="property">classmethod </em><tt class="descname">set_base_uri</tt><big>(</big><em>uri</em><big>)</big><a class="headerlink" href="#canoris.Canoris.set_base_uri" title="Permalink to this definition">¶</a></dt>
+<dd>Set the Canoris base URL.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="canoris.CanorisObject">
+<em class="property">class </em><tt class="descclassname">canoris.</tt><tt class="descname">CanorisObject</tt><big>(</big><em>attrs</em><big>)</big><a class="headerlink" href="#canoris.CanorisObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base object for File, Collection, Template, Task, etc.</p>
+<p>This class most notably implements the __getitem__ method so that the
+properties of the sub classes can be retrieved dictionary style.</p>
+<dl class="method">
+<dt id="canoris.CanorisObject.update">
+<tt class="descname">update</tt><big>(</big><big>)</big><a class="headerlink" href="#canoris.CanorisObject.update" title="Permalink to this definition">¶</a></dt>
+<dd>With an existing object, reload the data from the Canoris API.</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="canoris.Collection">
+<em class="property">class </em><tt class="descclassname">canoris.</tt><tt class="descname">Collection</tt><big>(</big><em>attrs</em><big>)</big><a class="headerlink" href="#canoris.Collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Collection class is used to interact with and to create Canoris collections.</p>
+<dl class="method">
+<dt id="canoris.Collection.add_file">
+<tt class="descname">add_file</tt><big>(</big><em>file</em><big>)</big><a class="headerlink" href="#canoris.Collection.add_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an existing File object to the Collection.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>file</dt>
+<dd>can be either a File object or a file&#8217;s key</dd>
+</dl>
+<p>Returns:</p>
+<p>None</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="canoris.Collection.create_collection">
+<em class="property">static </em><tt class="descname">create_collection</tt><big>(</big><em>name</em>, <em>public=True</em>, <em>license='ARR'</em><big>)</big><a class="headerlink" href="#canoris.Collection.create_collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new collection.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>name</dt>
+<dd>the name of the new collection</dd>
+</dl>
+<p>Keyword arguments:</p>
+<dl class="docutils">
+<dt>public</dt>
+<dd>whether the collection can later be accessed by other users (default: True)</dd>
+<dt>license</dt>
+<dd>if public, the files in the collection can be used under this license (default: AllRightsReserved)</dd>
+</dl>
+<p>N.B. The Licenses class contains all the licenses that can be used.</p>
+<p>Returns:</p>
+<p>a Collection object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.Collection.delete">
+<tt class="descname">delete</tt><big>(</big><big>)</big><a class="headerlink" href="#canoris.Collection.delete" title="Permalink to this definition">¶</a></dt>
+<dd>Delete the Collection from the Canoris API.</dd></dl>
+
+<dl class="method">
+<dt id="canoris.Collection.files">
+<tt class="descname">files</tt><big>(</big><em>page=0</em><big>)</big><a class="headerlink" href="#canoris.Collection.files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of Files in the Collection.</p>
+<p>Keyword arguments:</p>
+<dl class="docutils">
+<dt>page</dt>
+<dd>the page of files to retrieve, each page contains 20 files (default: 0)</dd>
+</dl>
+<p>Returns:</p>
+<p>a dictionary representing a paginated list</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="canoris.Collection.get_collection">
+<em class="property">static </em><tt class="descname">get_collection</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#canoris.Collection.get_collection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a Collection object by specifying the collection&#8217;s key or ref.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>key</dt>
+<dd>the collection&#8217;s key</dd>
+</dl>
+<p>Returns:</p>
+<p>a Collection object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.Collection.get_similar">
+<tt class="descname">get_similar</tt><big>(</big><em>query_file</em>, <em>preset</em>, <em>num_results=10</em><big>)</big><a class="headerlink" href="#canoris.Collection.get_similar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform a similarity search in this Collection.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>query_file</dt>
+<dd>can be either a File or a file&#8217;s key</dd>
+<dt>preset</dt>
+<dd>the similarity search preset to use (&#8216;music&#8217;, &#8216;rhythm&#8217;, or &#8216;lowlevel&#8217;)</dd>
+</dl>
+<p>Keyword arguments:</p>
+<dl class="docutils">
+<dt>num_results</dt>
+<dd>the number of results to return</dd>
+</dl>
+<p>Returns:</p>
+<p>a list with the search results</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.Collection.remove_file">
+<tt class="descname">remove_file</tt><big>(</big><em>file</em><big>)</big><a class="headerlink" href="#canoris.Collection.remove_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove a File from the Collection.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>file</dt>
+<dd>can be either a File object or a file&#8217;s key</dd>
+</dl>
+<p>Returns:</p>
+<p>None</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="canoris.File">
+<em class="property">class </em><tt class="descclassname">canoris.</tt><tt class="descname">File</tt><big>(</big><em>attrs</em><big>)</big><a class="headerlink" href="#canoris.File" title="Permalink to this definition">¶</a></dt>
+<dd><p>The File class is used to interact with and to upload Canoris files.</p>
+<dl class="staticmethod">
+<dt id="canoris.File.create_file">
+<em class="property">static </em><tt class="descname">create_file</tt><big>(</big><em>path</em>, <em>name=None</em>, <em>temporary=None</em><big>)</big><a class="headerlink" href="#canoris.File.create_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload a sound file and create a File object.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>path</dt>
+<dd>the path of the local sound file to upload</dd>
+</dl>
+<p>Keyword arguments:</p>
+<dl class="docutils">
+<dt>name</dt>
+<dd>give the file a name</dd>
+<dt>temporary</dt>
+<dd>mark the new file as temporary</dd>
+</dl>
+<p>Returns:</p>
+<p>a File object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.File.delete">
+<tt class="descname">delete</tt><big>(</big><big>)</big><a class="headerlink" href="#canoris.File.delete" title="Permalink to this definition">¶</a></dt>
+<dd>Delete a File from the Canoris API.</dd></dl>
+
+<dl class="method">
+<dt id="canoris.File.get_analysis">
+<tt class="descname">get_analysis</tt><big>(</big><em>showall=False</em>, <em>*filter</em><big>)</big><a class="headerlink" href="#canoris.File.get_analysis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the File&#8217;s analysis.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>any argument</dt>
+<dd>retrieve a certain part of the analysis tree</dd>
+</dl>
+<p>Keyword arguments:</p>
+<dl class="docutils">
+<dt>showall</dt>
+<dd>retrieve all available analysis data (default: False)</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">file1</span><span class="o">.</span><span class="n">get_analysis</span><span class="p">(</span><span class="s">&#39;highlevel&#39;</span><span class="p">,</span> <span class="s">&#39;gender&#39;</span><span class="p">,</span> <span class="s">&#39;value&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Returns:</p>
+<p>Depending on the filter returns a dictionary, list, number, or string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.File.get_conversions">
+<tt class="descname">get_conversions</tt><big>(</big><big>)</big><a class="headerlink" href="#canoris.File.get_conversions" title="Permalink to this definition">¶</a></dt>
+<dd>Retrieve a dictionary showing the available conversions.</dd></dl>
+
+<dl class="staticmethod">
+<dt id="canoris.File.get_file">
+<em class="property">static </em><tt class="descname">get_file</tt><big>(</big><em>key</em><big>)</big><a class="headerlink" href="#canoris.File.get_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a File object by specifying the file&#8217;s key or ref.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>key</dt>
+<dd>the file&#8217;s key</dd>
+</dl>
+<p>Returns:</p>
+<p>A File object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.File.get_visualizations">
+<tt class="descname">get_visualizations</tt><big>(</big><big>)</big><a class="headerlink" href="#canoris.File.get_visualizations" title="Permalink to this definition">¶</a></dt>
+<dd>Retrieve a dictionary showing the available visualizations.</dd></dl>
+
+<dl class="method">
+<dt id="canoris.File.retrieve">
+<tt class="descname">retrieve</tt><big>(</big><em>directory</em>, <em>name=False</em><big>)</big><a class="headerlink" href="#canoris.File.retrieve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the original file and save it to disk.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>directory</dt>
+<dd>save the file in this directory</dd>
+</dl>
+<p>Keyword arguments:</p>
+<dl class="docutils">
+<dt>name</dt>
+<dd>save the file under this name, if not present uses the original file name</dd>
+</dl>
+<p>Returns:</p>
+<p>a tuple: (&lt;path&gt;, &lt;httplib.HTTPMessage instance&gt;)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.File.retrieve_conversion">
+<tt class="descname">retrieve_conversion</tt><big>(</big><em>conv_key</em>, <em>path</em><big>)</big><a class="headerlink" href="#canoris.File.retrieve_conversion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a specific conversion and save it to disk.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>conv_key</dt>
+<dd>the key for the conversion to retrieve</dd>
+<dt>path</dt>
+<dd>save the file to this path</dd>
+</dl>
+<p>Returns:</p>
+<p>a tuple: (&lt;path&gt;, &lt;httplib.HTTPMessage instance&gt;)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.File.retrieve_visualization">
+<tt class="descname">retrieve_visualization</tt><big>(</big><em>vis_key</em>, <em>path</em><big>)</big><a class="headerlink" href="#canoris.File.retrieve_visualization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a specific visualization and save it to disk.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>vis_key</dt>
+<dd>the key for the visualization to retrieve</dd>
+<dt>path</dt>
+<dd>save the file to this path</dd>
+</dl>
+<p>N.B. waveform is png, spectrum is jpg</p>
+<p>Returns:</p>
+<p>a tuple: (&lt;path&gt;, &lt;httplib.HTTPMessage instance&gt;)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="canoris.Licenses">
+<em class="property">class </em><tt class="descclassname">canoris.</tt><tt class="descname">Licenses</tt><a class="headerlink" href="#canoris.Licenses" title="Permalink to this definition">¶</a></dt>
+<dd>The Licenses class encodes all the available licenses that can be used
+with collections.</dd></dl>
+
+<dl class="class">
+<dt id="canoris.Task">
+<em class="property">class </em><tt class="descclassname">canoris.</tt><tt class="descname">Task</tt><big>(</big><em>attrs</em><big>)</big><a class="headerlink" href="#canoris.Task" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Task class is used to interact with and to create Canoris tasks.</p>
+<dl class="staticmethod">
+<dt id="canoris.Task.create_task">
+<em class="property">static </em><tt class="descname">create_task</tt><big>(</big><em>template</em>, <em>parameters</em><big>)</big><a class="headerlink" href="#canoris.Task.create_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new processing task.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>template</dt>
+<dd>the template&#8217;s name to generate the task from</dd>
+<dt>parameters</dt>
+<dd>a Python dictionary of template variables to replace</dd>
+</dl>
+<p>Returns:</p>
+<p>a Task object</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="canoris.Task.get_task">
+<em class="property">static </em><tt class="descname">get_task</tt><big>(</big><em>task_id</em><big>)</big><a class="headerlink" href="#canoris.Task.get_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a Task object by specifying it&#8217;s id or ref.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>task_id</dt>
+<dd>the task&#8217;s id</dd>
+</dl>
+<p>Returns:</p>
+<p>a Task object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="canoris.Template">
+<em class="property">class </em><tt class="descclassname">canoris.</tt><tt class="descname">Template</tt><big>(</big><em>attrs</em><big>)</big><a class="headerlink" href="#canoris.Template" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Template class is used to interact with and to create Canoris templates.</p>
+<dl class="staticmethod">
+<dt id="canoris.Template.create_template">
+<em class="property">static </em><tt class="descname">create_template</tt><big>(</big><em>name</em>, <em>steps</em><big>)</big><a class="headerlink" href="#canoris.Template.create_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new template.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>name</dt>
+<dd>the template&#8217;s name</dd>
+<dt>steps</dt>
+<dd>a Python list</dd>
+</dl>
+<p>Returns:</p>
+<p>a Template object</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="canoris.Template.delete">
+<tt class="descname">delete</tt><big>(</big><big>)</big><a class="headerlink" href="#canoris.Template.delete" title="Permalink to this definition">¶</a></dt>
+<dd>Delete the Template from the Canoris API.</dd></dl>
+
+<dl class="staticmethod">
+<dt id="canoris.Template.get_template">
+<em class="property">static </em><tt class="descname">get_template</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#canoris.Template.get_template" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a template by specifying it&#8217;s name or ref.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>name</dt>
+<dd>the template&#8217;s name</dd>
+</dl>
+<p>Returns:</p>
+<p>a Template object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="canoris.Text2Phonemes">
+<em class="property">class </em><tt class="descclassname">canoris.</tt><tt class="descname">Text2Phonemes</tt><a class="headerlink" href="#canoris.Text2Phonemes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate text into phonemes.</p>
+<dl class="staticmethod">
+<dt id="canoris.Text2Phonemes.translate">
+<em class="property">static </em><tt class="descname">translate</tt><big>(</big><em>text</em>, <em>voice=False</em>, <em>language=False</em><big>)</big><a class="headerlink" href="#canoris.Text2Phonemes.translate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate text into phonemes.</p>
+<p>Arguments:</p>
+<dl class="docutils">
+<dt>text</dt>
+<dd>the text to translate</dd>
+</dl>
+<p>Keyword arguments:</p>
+<dl class="docutils">
+<dt>voice</dt>
+<dd>the Vocaloid voice to fine tune the phonemes for (ona, lara, or arnau)</dd>
+<dt>language</dt>
+<dd>the language of the text (english, or spanish)</dd>
+</dl>
+<p>Returns:</p>
+<p>a dictionary representing the translation</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="modindex.html" title="Global Module Index"
+             >modules</a> |</li>
+        <li><a href="#">canoris-python v0.9 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+      &copy; Copyright 2010, Vincent Akkermans.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 0.6.4.
+    </div>
+  </body>
+</html>
