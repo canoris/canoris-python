@@ -28,6 +28,8 @@ _URI_PHONEMES            = '/language/text2phonemes'
 
 
 def _uri(uri, *args):
+    if uri.startswith('http://') or uri.startswith('https://'):
+        return uri
     for a in args:
         uri = re.sub('<[\w_]+>', str(a), uri, 1)
     return Canoris.get_base_uri()+uri
@@ -180,13 +182,17 @@ class _CanReq(object):
             print 'resp:\n%s' % e.read()
             raise e
 
+    @classmethod
+    def retrieve(cls, url, path):
+        urllib.urlretrieve('%s?api_key=%s' % (url, Canoris.get_api_key()), path)
+
 
 class File(CanorisObject):
     '''The File class is used to interact with and to upload Canoris files.'''
 
     @staticmethod
     def get_file(key):
-        '''Retrieve a File object by specifying the file's key.
+        '''Retrieve a File object by specifying the file's key or ref.
 
         Arguments:
         key -- the file's key
@@ -194,7 +200,9 @@ class File(CanorisObject):
         Returns:
         A File object
         '''
-        return File.get_file_from_ref(_uri(_URI_FILE, key))
+        res = _CanReq.simple_get(_uri(_URI_FILE, key))
+        print res
+        return File(json.loads(res))
 
     @staticmethod
     def create_file(path, name=None, temporary=None):
@@ -243,45 +251,62 @@ class File(CanorisObject):
         return json.loads(_CanReq.simple_get(_uri(_URI_FILE_ANALYSIS, self['key'],
                                                '/'.join(filter)), params={'all': int(showall)} ))
 
-    def retrieve(self):
-        '''Retrieve the original file (binary data!)'''
-        return _CanReq.simple_get(self['serve'])
+    def retrieve(self, directory, name=False):
+        '''Retrieve the original file and save it to disk.
+
+        Arguments:
+        directory -- save the file in this directory
+
+        Keyword arguments:
+        name -- save the file under this name, if not present uses the original file name
+
+        Returns:
+        a tuple: (<path>, <httplib.HTTPMessage instance>)
+        '''
+        path = os.path.join(directory, name if name else self['name'])
+        return _CanReq.retrieve(self['serve'], path)
 
     def get_conversions(self):
         '''Retrieve a dictionary showing the available conversions.'''
         return json.loads(_CanReq.simple_get(self['conversions']))
 
-    def get_conversion(self, conv_key):
-        '''Retrieve a specific conversion.
+    def retrieve_conversion(self, conv_key, path):
+        '''Retrieve a specific conversion and save it to disk.
 
         Arguments:
         conv_key -- the key for the conversion to retrieve
+        path -- save the file to this path
 
         Returns:
-        binary data
+        a tuple: (<path>, <httplib.HTTPMessage instance>)
         '''
-        return _CanReq.simple_get(_uri(_URI_FILE_CONVERSION, self['key'],
-                                      conv_key))
+        return _CanReq.retrieve(_uri(_URI_FILE_CONVERSION,
+                                     self['key'], conv_key),
+                                path)
 
     def get_visualizations(self):
         '''Retrieve a dictionary showing the available visualizations.'''
         return json.loads(_CanReq.simple_get(self['visualizations']))
 
-    def get_visualization(self, vis_key):
-        '''Retrieve a specific visualization.
+    def retrieve_visualization(self, vis_key, path):
+        '''Retrieve a specific visualization and save it to disk.
 
         Arguments:
         vis_key -- the key for the visualization to retrieve
+        path -- save the file to this path
+
+        N.B. waveform is png, spectrum is jpg
 
         Returns:
-        binary data
+        a tuple: (<path>, <httplib.HTTPMessage instance>)
         '''
-        return _CanReq.simple_get(_uri(_URI_FILE_VISUALIZATION,
-                                      self['key'], vis_key))
+        return _CanReq.retrieve(_uri(_URI_FILE_VISUALIZATION,
+                                     self['key'], vis_key),
+                                path)
 
     def __repr__(self):
         return '<File: key="%s", name="%s">' % \
-                (self['key'], self['name'] if 'name' in self else 'n.a.')
+                (self['key'], self['name'] if 'name' in self.attributes else 'n.a.')
 
 
 class Collection(CanorisObject):
@@ -289,7 +314,7 @@ class Collection(CanorisObject):
 
     @staticmethod
     def get_collection(key):
-        '''Retrieve a Collection object by specifying the collection's key.
+        '''Retrieve a Collection object by specifying the collection's key or ref.
 
         Arguments:
         key -- the collection's key
@@ -391,7 +416,7 @@ class Template(CanorisObject):
 
     @staticmethod
     def get_template(name):
-        '''Retrieve a template by specifying it's name.
+        '''Retrieve a template by specifying it's name or ref.
 
         Arguments:
         name -- the template's name
@@ -426,7 +451,7 @@ class Task(CanorisObject):
 
     @staticmethod
     def get_task(task_id):
-        '''Retrieve a Task object by specifying it's id.
+        '''Retrieve a Task object by specifying it's id or ref.
 
         Arguments:
         task_id -- the task's id
