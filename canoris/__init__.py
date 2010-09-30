@@ -186,6 +186,49 @@ class _CanReq(object):
         urllib.urlretrieve('%s?api_key=%s' % (url, Canoris.get_api_key()), path)
 
 
+class PageException(Exception):
+    pass
+
+
+class Pager(CanorisObject):
+    '''A static class to handle paginating through your files.'''
+
+    @classmethod
+    def files_page(cls, page=0):
+        return cls._load_page(_uri(_URI_FILES), page)
+
+    @classmethod
+    def collection_page(cls, key, page=0):
+        return cls._load_page(_uri(_URI_COLLECTION_FILES, key), page)
+
+
+    @classmethod
+    def _load_page(cls, uri, page):
+        if page < 0:
+            raise PageException('The page argument should be >= 0.')
+        atts = json.loads(_CanReq.simple_get(uri, {'page': page}))
+        atts.update({'page': page,
+                     'pager_uri': uri})
+        return Pager(atts)
+
+    def next(self):
+        if not 'next' in self.attributes:
+            raise PageException('No more pages available.')
+        new_attrs = self.__prev_next(1)
+        self.attributes.update(new_attrs)
+
+    def previous(self):
+        if not 'previous' in self.attributes:
+            raise PageException('You are already at page 0.')
+        new_attrs = self.__prev_next(-1)
+        self.attributes.update(new_attrs)
+
+    def __prev_next(self, num):
+        return json.loads(_CanReq.simple_get(self.attributes['pager_uri'],
+                                             {'page': self['page']+num}))
+
+
+
 class File(CanorisObject):
     '''The File class is used to interact with and to upload Canoris files.'''
 
@@ -381,8 +424,7 @@ class Collection(CanorisObject):
         '''
         public = '1' if public else '0'
         params = {'name': name, 'public': public, 'license': license}
-        resp = _CanReq.simple_post(_uri(_URI_COLLECTIONS), params)
-        return json.loads(resp)
+        return Collection(json.loads(_CanReq.simple_post(_uri(_URI_COLLECTIONS), params)))
 
     def delete(self):
         '''Delete the Collection from the Canoris API.'''
