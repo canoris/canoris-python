@@ -214,18 +214,21 @@ class Pager(CanorisObject):
     def next(self):
         if not 'next' in self.attributes:
             raise PageException('No more pages available.')
-        new_attrs = self.__prev_next(1)
-        self.attributes.update(new_attrs)
+        self.__prev_next(1)
 
     def previous(self):
         if not 'previous' in self.attributes:
             raise PageException('You are already at page 0.')
-        new_attrs = self.__prev_next(-1)
-        self.attributes.update(new_attrs)
+        self.__prev_next(-1)
+
 
     def __prev_next(self, num):
-        return json.loads(_CanReq.simple_get(self.attributes['pager_uri'],
-                                             {'page': self['page']+num}))
+        new_page = self['page']+num
+        self.attributes = {'page': new_page,
+                           'pager_uri': self['pager_uri']}
+        new_attr = json.loads(_CanReq.simple_get(self.attributes['pager_uri'],
+                                                 {'page': new_page}))
+        self.attributes.update(new_attr)
 
 
 
