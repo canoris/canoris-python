@@ -28,8 +28,8 @@ _URI_PHONEMES            = '/language/text2phonemes'
 
 
 def _uri(uri, *args):
-    if uri.startswith('http://') or uri.startswith('https://'):
-        return uri
+    if len(args) > 0 and args[0].startswith('http://') or args[0].startswith('https://'):
+        return args[0]
     for a in args:
         uri = re.sub('<[\w_]+>', str(a), uri, 1)
     return Canoris.get_base_uri()+uri
@@ -242,14 +242,13 @@ class File(CanorisObject):
         Arguments:
 
         key
-          the file's key
+          the file's key or ref
 
         Returns:
 
         A File object
         '''
         res = _CanReq.simple_get(_uri(_URI_FILE, key))
-        print res
         return File(json.loads(res))
 
     @staticmethod
