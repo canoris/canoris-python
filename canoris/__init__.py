@@ -502,7 +502,7 @@ class Collection(CanorisObject):
                  for result in json.loads(_CanReq.simple_get(uri))]
 
     def __repr__(self):
-        return '<File: key="%s", name="%s">' % (self['key'], self['name'])
+        return '<Collection: key="%s", name="%s">' % (self['key'], self['name'])
 
 
 
@@ -547,6 +547,9 @@ class Template(CanorisObject):
         '''Delete the Template from the Canoris API.'''
         return _CanReq.simple_del(self['ref'])
 
+    def __repr__(self):
+        return '<Template: name="%s">' % self['name']
+
 
 class Task(CanorisObject):
     '''The Task class is used to interact with and to create Canoris tasks.'''
@@ -587,7 +590,7 @@ class Task(CanorisObject):
                                      'parameters': json.dumps(parameters)})))
 
     def __repr__(self):
-        return '<File: task_id="%s", completed="%s", successful="%s">' % \
+        return '<Task: task_id="%s", completed="%s", successful="%s">' % \
                 (self['task_id'], self['complete'], self['successful'])
 
 
