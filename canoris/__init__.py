@@ -28,7 +28,7 @@ _URI_PHONEMES            = '/language/text2phonemes'
 
 
 def _uri(uri, *args):
-    if len(args) > 0 and args[0].startswith('http://') or args[0].startswith('https://'):
+    if len(args) >= 1 and (args[0].startswith('http://') or args[0].startswith('https://')):
         return args[0]
     for a in args:
         uri = re.sub('<[\w_]+>', str(a), uri, 1)
