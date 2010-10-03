@@ -278,8 +278,15 @@ class File(CanorisObject):
             args['temporary'] = 1 if temporary else 0
         args['api_key'] = Canoris.get_api_key()
         datagen, headers = multipart_encode(args)
-        request = urllib2.Request(_uri(_URI_FILES), datagen, headers)
-        resp = urllib2.urlopen(request).read()
+        try:
+            request = urllib2.Request(_uri(_URI_FILES), datagen, headers)
+            resp = urllib2.urlopen(request).read()
+        except HTTPError, e:
+            # this seems necessary for OSX
+            if e.code == 201:
+                resp = e.read()
+            else:
+                raise e
         return File(json.loads(resp))
 
     def delete(self):
