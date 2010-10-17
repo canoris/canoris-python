@@ -183,7 +183,7 @@ class _CanReq(object):
 
     @classmethod
     def retrieve(cls, url, path):
-        urllib.urlretrieve('%s?api_key=%s' % (url, Canoris.get_api_key()), path)
+        return urllib.urlretrieve('%s?api_key=%s' % (url, Canoris.get_api_key()), path)
 
 
 class PageException(Exception):
