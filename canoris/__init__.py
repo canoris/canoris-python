@@ -1,4 +1,4 @@
-import httplib2, urllib2, urllib, re, os
+import httplib2, urllib2, urllib, re, os, uuid
 from poster.encode import multipart_encode
 from poster.streaminghttp import register_openers
 import simplejson as json
@@ -162,28 +162,56 @@ class _CanReq(object):
         u = '%s?%s' % (uri, urllib.urlencode(p))
         d = urllib.urlencode(data) if data else None
         req = _RequestWithMethod(u, method, d)
+        return cls._handle_errors(req)
+
+    @classmethod
+    def _handle_errors(cls, req):
         try:
             try:
                 f = urllib2.urlopen(req)
+                resp = f.read()
+                f.close()
+                return resp
             except HTTPError, e:
                 if e.code >= 200 and e.code < 300:
                     resp = e.read()
                     return resp
                 else:
                     raise e
-            resp = f.read()
-            f.close()
-            return resp
         except HTTPError, e:
-            # TODO; this is ugly
-            print '--- request failed ---'
-            print 'code:\t%s' % e.code
-            print 'resp:\n%s' % e.read()
-            raise e
+            resp = e.read()
+            try:
+                error = json.loads(resp)
+            except:
+                # not a json response, something is really wrong!
+                raise Exception(resp)
+            raise CanorisException(error.get('status_code', 50),
+                                   error.get('explanation', ''),
+                                   error.get('type', ''),
+                                   error.get('throttled', False))
+
+    @classmethod
+    def post_file(cls, uri, args):
+        datagen, headers = multipart_encode(args)
+        req = urllib2.Request(_uri(_URI_FILES), datagen, headers)
+        return cls._handle_errors(req)
+
 
     @classmethod
     def retrieve(cls, url, path):
         return urllib.urlretrieve('%s?api_key=%s' % (url, Canoris.get_api_key()), path)
+
+
+class CanorisException(Exception):
+    def __init__(self, code, explanation, type, throttled=False):
+        self.code = code
+        self.explanation = explanation
+        self.type = type
+        self.throttled = throttled
+
+    def __str__(self):
+        return '<CanorisException: code=%s, type="%s", explanation="%s", throttled=%s>' % \
+                (self.code, self.type, self.explanation, self.throttled)
 
 
 class PageException(Exception):
@@ -258,7 +286,7 @@ class File(CanorisObject):
         Arguments:
 
         path
-          the path of the local sound file to upload
+          the path of the local sound file to upload -or- the url of a file on the web
 
         Keyword arguments:
 
@@ -271,23 +299,23 @@ class File(CanorisObject):
 
         a File object
         '''
-        args = {"file": open(path, "rb")}
+        args = {}
+        if path.startswith('http'):
+            args['url'] = path
+        else:
+            args['file'] = open(path, "rb")
         if name != None:
             args['name'] = str(name)
         if temporary != None:
             args['temporary'] = 1 if temporary else 0
         args['api_key'] = Canoris.get_api_key()
-        datagen, headers = multipart_encode(args)
         try:
-            request = urllib2.Request(_uri(_URI_FILES), datagen, headers)
-            resp = urllib2.urlopen(request).read()
-        except HTTPError, e:
-            # this seems necessary for OSX
-            if e.code == 201:
-                resp = e.read()
-            else:
-                raise e
-        return File(json.loads(resp))
+            resp = _CanReq.post_file(_uri(_URI_FILES), args)
+            return File(json.loads(resp))
+        finally:
+            if 'file' in args:
+                args['file'].close()
+
 
     def delete(self):
         '''Delete a File from the Canoris API.'''
@@ -319,6 +347,20 @@ class File(CanorisObject):
         return json.loads(_CanReq.simple_get(_uri(_URI_FILE_ANALYSIS, self['key'],
                                                '/'.join(filter)), params={'all': int(showall)} ))
 
+    def retrieve_analysis_frames(self, path):
+        '''Retrieve the json file with the analysis data for all the frames.
+
+        Arguments:
+
+        path
+          Save the file here.
+
+        Returns:
+
+        a tuple: (<path>, <httplib.HTTPMessage instance>)
+        '''
+        return _CanReq.retrieve(self['analysis_frames'], path)
+
     def retrieve(self, directory, name=False):
         '''Retrieve the original file and save it to disk.
 
@@ -336,7 +378,8 @@ class File(CanorisObject):
 
         a tuple: (<path>, <httplib.HTTPMessage instance>)
         '''
-        path = os.path.join(directory, name if name else self['name'])
+        file_name = name if name else self.attributes.get('name', str(uuid.uuid4()))
+        path = os.path.join(directory, file_name)
         return _CanReq.retrieve(self['serve'], path)
 
     def get_conversions(self):
