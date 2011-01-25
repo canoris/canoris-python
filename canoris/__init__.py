@@ -229,7 +229,6 @@ class Pager(CanorisObject):
     def collection_page(cls, key, page=0):
         return cls._load_page(_uri(_URI_COLLECTION_FILES, key), page)
 
-
     @classmethod
     def _load_page(cls, uri, page):
         if page < 0:
@@ -248,7 +247,6 @@ class Pager(CanorisObject):
         if not 'previous' in self.attributes:
             raise PageException('You are already at page 0.')
         self.__prev_next(-1)
-
 
     def __prev_next(self, num):
         new_page = self['page']+num
