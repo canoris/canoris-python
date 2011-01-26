@@ -8,7 +8,7 @@ from settings import *
 
 
 
-class CanorisTest(unittest.TestCase):
+class CanorisTests(unittest.TestCase):
 
 
     def setUp(self):
@@ -47,19 +47,19 @@ class CanorisTest(unittest.TestCase):
                 time.sleep(1)
 
     def test_get_file(self):
-        f1 = File.get_file('42976b41ec7c417ba0db174871eba7c1')
-        f2 = File.get_file('http://api-test.canoris.com/files/42976b41ec7c417ba0db174871eba7c1')
+        f1 = File.get_file(CERTAIN_FILE_KEY)
+        f2 = File.get_file('http://api-test.canoris.com/files/' + CERTAIN_FILE_KEY)
         assert(f1['key'] == f2['key'])
 
     def test_retrieve_analysis_frames(self):
-        f = File.get_file('42976b41ec7c417ba0db174871eba7c1')
+        f = File.get_file(CERTAIN_FILE_KEY)
         path, _ = f.retrieve_analysis_frames('/tmp/42976b41ec7c417ba0db174871eba7c1_frames.json')
         fp = open(path)
         json.load(fp)
         fp.close()
 
     def test_retrieve_visualization(self):
-        f = File.get_file('42976b41ec7c417ba0db174871eba7c1')
+        f = File.get_file(CERTAIN_FILE_KEY)
         viss = f.get_visualizations()
         assert('spectrum' in viss)
         assert('waveform' in viss)
@@ -117,20 +117,19 @@ class CanorisTest(unittest.TestCase):
                     raise e
 
     def test_collection_pager(self):
-        p = Pager.collection_page('01fc9d5ac53a4fe79911c78605c422f8', 0)
-        assert(len(p['items']) == 20)
-        p.next()
-        assert(len(p['items']) == 10)
-        self.assertRaises(PageException, p.next)
-        p.previous()
+        p = Pager.collection_page(CERTAIN_COLLECTION_KEY, 0)
         self.assertRaises(PageException, p.previous)
-        self.assertRaises(PageException, p.previous)
-        p.next()
+        if p['total'] <= 20:
+            self.assertRaises(PageException, p.next)
+        else:
+            p.next()
 
     def test_files_pager(self):
         p = Pager.files_page(0)
-        assert(len(p['items']) == 20)
-        p['total']
+        if p['total'] <= 20:
+            self.assertRaises(PageException, p.next)
+        else:
+            p.next()
 
     def test_collections_pager(self):
         p = Pager.collections_page(0)
@@ -139,7 +138,6 @@ class CanorisTest(unittest.TestCase):
             self.assertRaises(PageException, p.next)
         else:
             p.next()
-
 
     @staticmethod
     def __filter_audio_files(directory):
