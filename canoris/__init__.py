@@ -230,6 +230,10 @@ class Pager(CanorisObject):
         return cls._load_page(_uri(_URI_COLLECTION_FILES, key), page)
 
     @classmethod
+    def collections_page(cls, page=0):
+        return cls._load_page(_uri(_URI_COLLECTIONS), page)
+
+    @classmethod
     def _load_page(cls, uri, page):
         if page < 0:
             raise PageException('The page argument should be >= 0.')
