@@ -4,6 +4,8 @@ from poster.streaminghttp import register_openers
 import simplejson as json
 from urllib2 import HTTPError
 
+VERSION = '0.10'
+
 # Register the streaming http handlers with urllib2
 register_openers()
 
