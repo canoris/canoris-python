@@ -67,6 +67,14 @@ class CanorisTests(unittest.TestCase):
         fp = open(path)
         fp.close()
 
+    def test_retrieve_conversion(self):
+        f = File.get_file(CERTAIN_FILE_KEY)
+        path = '/tmp/%s.wav' % CERTAIN_FILE_KEY
+        # This conversion doesn't consist for this file
+        self.assertRaises(CanorisException, f.retrieve_conversion, 'wave_22050', path)
+        # This conversion does exist
+        f.retrieve_conversion('wave_44100', path)
+
     def test_retrieve_file_upload(self):
         f = File.create_file(TEST_LOCAL_AUDIO_FILE, temporary=True)
         path, _ = f.retrieve('/tmp/')

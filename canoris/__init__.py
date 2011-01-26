@@ -198,10 +198,9 @@ class _CanReq(object):
         req = urllib2.Request(_uri(_URI_FILES), datagen, headers)
         return cls._handle_errors(req)
 
-
     @classmethod
     def retrieve(cls, url, path):
-        return urllib.urlretrieve('%s?api_key=%s' % (url, Canoris.get_api_key()), path)
+        return _CanRetriever().retrieve('%s?api_key=%s' % (url, Canoris.get_api_key()), path)
 
 
 class CanorisException(Exception):
@@ -214,6 +213,20 @@ class CanorisException(Exception):
     def __str__(self):
         return '<CanorisException: code=%s, type="%s", explanation="%s", throttled=%s>' % \
                 (self.code, self.type, self.explanation, self.throttled)
+
+
+class _CanRetriever(urllib.FancyURLopener):
+    def http_error_default(self, url, fp, errcode, errmsg, headers):
+        # TODO: possibly DRY this out
+        resp = fp.read()
+        try:
+            error = json.loads(resp)
+        except:
+            raise Exception(resp)
+        raise CanorisException(errcode,
+                               error.get('explanation', ''),
+                               error.get('type', ''),
+                               error.get('throttled', False))
 
 
 class PageException(Exception):
