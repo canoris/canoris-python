@@ -3,6 +3,7 @@ from poster.encode import multipart_encode
 from poster.streaminghttp import register_openers
 import simplejson as json
 from urllib2 import HTTPError
+from urlparse import parse_qsl, urlparse, urlunparse
 
 VERSION = '0.10'
 
@@ -159,11 +160,14 @@ class _CanReq(object):
 
     @classmethod
     def _simple_req(cls, uri, method, params, data=False):
-        p = params if params else {}
-        p['api_key'] = Canoris.get_api_key()
-        u = '%s?%s' % (uri, urllib.urlencode(p))
+        up = urlparse(uri)
+        dqsl = dict(parse_qsl(up.query))
+        dqsl['api_key'] = Canoris.get_api_key()
+        dqsl.update(params)
+        uri = urlunparse([up.scheme, up.netloc, up.path, up.params,
+                          urllib.urlencode(dqsl), up.fragment])
         d = urllib.urlencode(data) if data else None
-        req = _RequestWithMethod(u, method, d)
+        req = _RequestWithMethod(uri, method, d)
         return cls._handle_errors(req)
 
     @classmethod
@@ -234,46 +238,70 @@ class PageException(Exception):
 
 
 class Pager(CanorisObject):
-    '''A static class to handle paginating through your files.'''
+    '''Pagers are used to paginate through your Canoris files, collections, and
+    collection files.
+    '''
 
     @classmethod
-    def files_page(cls, page=0):
-        return cls._load_page(_uri(_URI_FILES), page)
+    def files_page(cls, page=0, start=None, limit=20):
+        '''Retrieve a paginator object for paging through your files.
+
+        TODO: document arguments, etc.
+        '''
+        return cls._load_page(_uri(_URI_FILES), page, start, limit)
 
     @classmethod
-    def collection_page(cls, key, page=0):
-        return cls._load_page(_uri(_URI_COLLECTION_FILES, key), page)
+    def collection_page(cls, key, page=0, start=None, limit=20):
+        '''Retrieve a paginator object for paging through the files in a
+        collection.
+        '''
+        return cls._load_page(_uri(_URI_COLLECTION_FILES, key),
+                              page, start, limit)
 
     @classmethod
-    def collections_page(cls, page=0):
-        return cls._load_page(_uri(_URI_COLLECTIONS), page)
+    def collections_page(cls, page=0, start=None, limit=20):
+        '''Retrieve a paginator object for paging through your collections.
+        '''
+        return cls._load_page(_uri(_URI_COLLECTIONS), page, start, limit)
 
     @classmethod
-    def _load_page(cls, uri, page):
-        if page < 0:
-            raise PageException('The page argument should be >= 0.')
-        atts = json.loads(_CanReq.simple_get(uri, {'page': page}))
-        atts.update({'page': page,
-                     'pager_uri': uri})
+    def _load_page(cls, uri, page=None, start=None, limit=20):
+        '''
+        If page, start, and limit are all None we will assume the URI has the
+        right parameters already set. Otherwise we will build the right URI.
+        '''
+        if page==None and start==None:
+            params = {}
+        else:
+            # if start is not None we will ignore page
+            params = {'limit': limit}
+            if start != None:
+                if not isinstance(start, int) or start < 0:
+                    raise PageException('Use a sane value for start (>=0).')
+                params['start'] = start
+            else:
+                if page == None or not isinstance(page, int) or page < 0:
+                    raise PageException('Please use either page or start and with a sane value for page (>=0).')
+                params['page'] = page
+        atts = json.loads(_CanReq.simple_get(uri, params))
         return Pager(atts)
 
     def next(self):
+        '''Load the next page.'''
         if not 'next' in self.attributes:
             raise PageException('No more pages available.')
-        self.__prev_next(1)
+        self.__prev_next('next')
 
     def previous(self):
+        '''Load the previous page.'''
         if not 'previous' in self.attributes:
             raise PageException('You are already at page 0.')
-        self.__prev_next(-1)
+        self.__prev_next('previous')
 
-    def __prev_next(self, num):
-        new_page = self['page']+num
-        self.attributes = {'page': new_page,
-                           'pager_uri': self['pager_uri']}
-        new_attr = json.loads(_CanReq.simple_get(self.attributes['pager_uri'],
-                                                 {'page': new_page}))
-        self.attributes.update(new_attr)
+    def __prev_next(self, direction):
+        uri = self.attributes[direction]
+        new_attrs = json.loads(_CanReq.simple_get(uri, {}))
+        self.attributes.update(new_attrs)
 
 
 
@@ -529,20 +557,6 @@ class Collection(CanorisObject):
         uri = _uri(_URI_COLLECTION_FILE, self['key'],
                    file['key'] if isinstance(file, File) else file)
         _CanReq.simple_del(uri)
-
-    def files(self, page=0):
-        '''Get a list of Files in the Collection.
-
-        Keyword arguments:
-
-        page
-          the page of files to retrieve, each page contains 20 files (default: 0)
-
-        Returns:
-
-        a dictionary representing a paginated list
-        '''
-        return json.loads(_CanReq.simple_get(self['files'], params={'page': page} ))
 
     def get_similar(self, query_file, preset, num_results=10):
         '''Perform a similarity search in this Collection.

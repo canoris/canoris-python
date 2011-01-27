@@ -147,6 +147,39 @@ class CanorisTests(unittest.TestCase):
         else:
             p.next()
 
+    def test_limited_files_pager(self):
+        p = Pager.files_page(0, limit=10)
+        if p['total'] >= 10:
+            assert(len(p['items']) == 10)
+        else:
+            assert(len(p['items']) == p['total'])
+
+    def test_indexed_collection_pager(self):
+        p = Pager.collection_page(CERTAIN_COLLECTION_KEY, start=0, limit=1)
+        self.assertRaises(PageException, p.previous)
+        assert(len(p['items']) == 1)
+        if p['total'] <= 1:
+            self.assertRaises(PageException, p.next)
+        else:
+            p.next()
+
+    def test_indexed_files_pager(self):
+        p = Pager.files_page(start=3, limit=2)
+        assert(len(p['items']) == 2)
+        if p['total'] <= 2:
+            self.assertRaises(PageException, p.next)
+        else:
+            p.next()
+
+    def test_indexed_collections_pager(self):
+        p = Pager.collections_page(start=0, limit=10)
+        assert(len(p['items']) == 10)
+        self.assertRaises(PageException, p.previous)
+        if p['total'] <= 10:
+            self.assertRaises(PageException, p.next)
+        else:
+            p.next()
+
     @staticmethod
     def __filter_audio_files(directory):
         possible = ['.aiff', '.aif', '.wav', '.mp3']
