@@ -163,7 +163,8 @@ class _CanReq(object):
         up = urlparse(uri)
         dqsl = dict(parse_qsl(up.query))
         dqsl['api_key'] = Canoris.get_api_key()
-        dqsl.update(params)
+        if params and isinstance(params, dict):
+            dqsl.update(params)
         uri = urlunparse([up.scheme, up.netloc, up.path, up.params,
                           urllib.urlencode(dqsl), up.fragment])
         d = urllib.urlencode(data) if data else None
