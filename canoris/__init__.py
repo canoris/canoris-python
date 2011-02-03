@@ -3,7 +3,8 @@ from poster.encode import multipart_encode
 from poster.streaminghttp import register_openers
 import simplejson as json
 from urllib2 import HTTPError
-from urlparse import parse_qsl, urlparse, urlunparse
+from urlparse import urlparse, urlunparse
+from cgi import parse_qsl
 
 VERSION = '0.10'
 
