@@ -195,7 +195,8 @@ class _CanReq(object):
             raise CanorisException(error.get('status_code', 50),
                                    error.get('explanation', ''),
                                    error.get('type', ''),
-                                   error.get('throttled', False))
+                                   error.get('throttled', False),
+                                   error.get('debug', ''))
 
     @classmethod
     def post_file(cls, uri, args):
@@ -209,11 +210,12 @@ class _CanReq(object):
 
 
 class CanorisException(Exception):
-    def __init__(self, code, explanation, type, throttled=False):
+    def __init__(self, code, explanation, type, throttled=False, debug=''):
         self.code = code
         self.explanation = explanation
         self.type = type
         self.throttled = throttled
+        self.debug = debug
 
     def __str__(self):
         return '<CanorisException: code=%s, type="%s", explanation="%s", throttled=%s>' % \
