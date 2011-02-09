@@ -193,7 +193,7 @@ class _CanReq(object):
             except:
                 # not a json response, something is really wrong!
                 raise Exception(resp)
-            raise CanorisException(error.get('status_code', 50),
+            raise CanorisException(error.get('status_code', 500),
                                    error.get('explanation', ''),
                                    error.get('type', ''),
                                    error.get('throttled', False),
@@ -370,7 +370,7 @@ class File(CanorisObject):
         '''Delete a File from the Canoris API.'''
         return _CanReq.simple_del(self['ref'])
 
-    def get_analysis(self, showall=False, *filter):
+    def get_analysis(self, *filter, **kwargs):
         '''Retrieve the File's analysis.
 
         Arguments:
@@ -388,13 +388,16 @@ class File(CanorisObject):
         ::
 
           file1.get_analysis('highlevel', 'gender', 'value')
+          file2.get_analysis(showall=True)
 
         Returns:
 
         Depending on the filter returns a dictionary, list, number, or string.
         '''
-        return json.loads(_CanReq.simple_get(_uri(_URI_FILE_ANALYSIS, self['key'],
-                                               '/'.join(filter)), params={'all': int(showall)} ))
+        return json.loads(
+                 _CanReq.simple_get(
+                    _uri(_URI_FILE_ANALYSIS, self['key'], '/'.join(filter)),
+                    params={'all': '1' if kwargs.get('showall', False) else '0'}))
 
     def retrieve_analysis_frames(self, path):
         '''Retrieve the json file with the analysis data for all the frames.

@@ -180,6 +180,20 @@ class CanorisTests(unittest.TestCase):
         else:
             p.next()
 
+    def test_retrieve_all_analysis_data(self):
+        f = File.get_file(CERTAIN_FILE_KEY)
+        ana = f.get_analysis(showall=True)
+        assert('thpcp' in ana.get('tonal', {}))
+
+    def test_analysis_filter(self):
+        f = File.get_file(CERTAIN_FILE_KEY)
+        ana = f.get_analysis('highlevel', 'gender', 'all', showall=True)
+        assert('male' in ana)
+        assert('female' in ana)
+        ana = f.get_analysis('highlevel', 'gender', 'all', showall=False)
+        assert('male' in ana)
+        assert('female' in ana)
+
     @staticmethod
     def __filter_audio_files(directory):
         possible = ['.aiff', '.aif', '.wav', '.mp3']
